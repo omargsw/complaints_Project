@@ -28,6 +28,9 @@ class AddPost extends StatefulWidget {
 class _AddPostState extends State<AddPost> {
   var id = sharedPreferences!.getInt('userID');
 
+  var name ;
+  var email ;
+  var status ;
   GlobalKey<FormState> _form= GlobalKey<FormState>();
   var desc=TextEditingController();
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -40,14 +43,15 @@ class _AddPostState extends State<AddPost> {
   File ? imageFile;
   final imagePicker = ImagePicker();
 
-  Future insertPost(var user_id,var title ,var description,var image,var staus) async {
+  Future insertPost(var user_id,var title ,var description,var image,var staus,var type) async {
     String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/insertPost.php';
     final response = await http.post(Uri.parse(url), body: {
       "user_id": user_id,
       "title": title,
       "description": description,
       "image": image,
-      "staus" : staus
+      "staus" : staus,
+      "type" : type
     });
     print(response.body);
   }
@@ -55,6 +59,44 @@ class _AddPostState extends State<AddPost> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          if(_form.currentState!.validate()){
+            if (file == null) return;
+            final fileName = basename(file!.path);
+            final destination = 'files/$fileName';
+
+            task = FirebaseApi.uploadFile(destination, file!);
+            setState(() {});
+
+            if (task == null) return;
+
+            final snapshot = await task!.whenComplete(() {});
+            urlDownload = await snapshot.ref.getDownloadURL();
+
+            path = base64Encode(file!.readAsBytesSync());
+
+            await insertPost(id.toString(), "", desc.text.toString(), urlDownload.toString(), "Pending",status);
+
+          Map<String, dynamic> post = {
+          "name": name,
+          "email": email,
+          "userid": id,
+          "description" : desc.text,
+          "fileurl" : urlDownload,
+          "status" : status,
+          "time": FieldValue.serverTimestamp(),
+          };
+
+          desc.clear();
+          await _firestore.collection('posts').doc(email).collection('posts').add(post);
+
+        }
+        },
+        label: const Text('Upload Post'),
+        icon: const Icon(Icons.post_add),
+        backgroundColor: ColorForDesign().blue,
+      ),
       backgroundColor: ColorForDesign().lightblue,
       body: widget.user!.isEmpty || widget.user == null ?
       Center(
@@ -79,6 +121,8 @@ class _AddPostState extends State<AddPost> {
         itemCount: widget.user!.length,
         itemBuilder: (context, index) {
           UserInfoApi userApi = widget.user![index];
+          name = userApi.name;
+          email = userApi.email;
           if(widget.user!.isEmpty || widget.user == null){
             return Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -142,6 +186,7 @@ class _AddPostState extends State<AddPost> {
                         // print(path);
                         setState(() {
                           file = File(path);
+                          status = "video";
                           //uplfile = true;
                         });
                       },
@@ -161,6 +206,7 @@ class _AddPostState extends State<AddPost> {
                         print("Path is ===="+path);
                         setState(() {
                           file = File(path);
+                          status = "image";
                           //uplfile = true;
                         });
                       },
@@ -169,46 +215,17 @@ class _AddPostState extends State<AddPost> {
                     )
                   ],
                 ),
-                Builder(
-                  builder: (context) => Center(
-                    child: ButtonWidget(
-                      text: 'Upload Post',
-                      width: 300,
-                      onClicked: () async {
-                        if(_form.currentState!.validate()){
-                          if (file == null) return;
-                          final fileName = basename(file!.path);
-                          final destination = 'files/$fileName';
-
-                          task = FirebaseApi.uploadFile(destination, file!);
-                          setState(() {});
-
-                          if (task == null) return;
-
-                          final snapshot = await task!.whenComplete(() {});
-                          urlDownload = await snapshot.ref.getDownloadURL();
-
-                          path = base64Encode(file!.readAsBytesSync());
-
-                          await insertPost(id.toString(), "", desc.text.toString(), urlDownload.toString(), "Pending");
-
-                          Map<String, dynamic> post = {
-                            "name": userApi.name,
-                            "email": userApi.email,
-                            "userid": userApi.id,
-                            "description" : desc.text,
-                            "fileurl" : urlDownload,
-                            "time": FieldValue.serverTimestamp(),
-                          };
-
-                          desc.clear();
-                          await _firestore.collection('posts').doc(userApi.email).collection('posts').add(post);
-
-                        }
-                      },
-                    ),
-                  ),
-                ),
+                // Builder(
+                //   builder: (context) => Center(
+                //     child: ButtonWidget(
+                //       text: 'Upload Post',
+                //       width: 300,
+                //       onClicked: () async {
+                //
+                //       },
+                //     ),
+                //   ),
+                // ),
               ],
             );
 

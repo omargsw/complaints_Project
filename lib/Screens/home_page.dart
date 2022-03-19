@@ -1,11 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 
-import 'package:complaints_project/Screens/profile_screen.dart';
 import 'package:complaints_project/Widgets/colors.dart';
-import 'package:complaints_project/Widgets/drawer.dart';
 import 'package:flutter/material.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:video_player/video_player.dart';
+import 'package:http/http.dart' as http;
+
+import '../Model/fetch_post.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -18,6 +19,17 @@ class _HomePageState extends State<HomePage> {
 
   VideoPlayerController? _controller;
   bool isplay = true;
+
+  List<PostApi> posts = [];
+  Future Posts() async {
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/fetchPost.php';
+    final response = await http.get(Uri.parse(url));
+    var json = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      final List<PostApi> postlist = postApiFromJson(response.body);
+      return postlist;
+    }
+  }
 
   void startTimer() {
     Timer(
@@ -32,6 +44,11 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    Posts().then((postlist){
+      setState(() {
+        posts = postlist;
+      });
+    });
     _controller = VideoPlayerController.network(
         'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4')
       ..initialize().then((_) {
@@ -55,97 +72,108 @@ class _HomePageState extends State<HomePage> {
           ),
           child: ListView.builder(
             scrollDirection: Axis.vertical,
-            itemCount: 3,
+            itemCount: posts.length,
             itemBuilder: (context, index) {
-              return Column(
-                children: <Widget>[
-                  Card(
-                    color: Colors.white,
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: const CircleAvatar(
-                            radius: 28,
-                            backgroundImage: AssetImage('assets/images/image.jpg'),
-                          ),
-                          title: const Text('name'),
-                          subtitle: Text(
-                            '19/2/2022',
-                            style: TextStyle(color: Colors.black.withOpacity(0.6)),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(
-                            'Greyhound divisively hello coldly wonderfully marginally far upon excluding.',
-                            style: TextStyle(color: Colors.black.withOpacity(0.6)),
-                          ),
-                        ),
-                        Center(
-                          child: _controller!.value.isInitialized
-                              ? Stack(
-                            children: [
-                              InkWell(
-                                onTap: (){
-                                setState(() {
-                                  if(isplay){
-                                    isplay = false;
-                                  }else{
-                                    isplay = true;
-                                  }
-                                });
-                                },
-                                child: AspectRatio(
-                                  aspectRatio: _controller!.value.aspectRatio,
-                                  child: VideoPlayer(_controller!),
-                                ),
-                              ),
-                              isplay ?
-                              Positioned(
-                                top: 70,
-                                  left: 150,
-                                  child: Center(
-                                    child: FloatingActionButton(
-                                      backgroundColor: Colors.black54,
-                                      onPressed: () {
-                                        startTimer();
-                                        setState(() {
-                                          _controller!.value.isPlaying
-                                              ? _controller!.pause()
-                                              : _controller!.play();
-                                        });
-                                      },
-                                      child: Icon(
-                                        _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
-                                        size: 40,
-                                      ),
-                                    ),
-                                  )
-                              ) : Container(),
+              PostApi postApi = posts[index];
+              if(posts.isEmpty || posts == null){
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    CircularProgressIndicator(),
+                  ],
+                );
+              }else{
+                return Column(
+                  children: <Widget>[
+                    Card(
+                      color: Colors.white,
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
 
-                            ],
-                          )
-                              : Container(),
-                        ),
-                        ButtonBar(
-                          alignment: MainAxisAlignment.start,
-                          children: [
-                            FlatButton(
-                              onPressed: () {
-                                // Perform some action
-                              },
-                              child: const Text('Add Comment'),
+                        children: [
+                          ListTile(
+                            leading: CircleAvatar(
+                              radius: 28,
+                              backgroundImage: NetworkImage('https://abulsamrie11.000webhostapp.com/image/${postApi.userImage}')
                             ),
-                          ],
-                        ),
-                      ],
+                            title: Text(postApi.name),
+                            subtitle: Text("${postApi.createdAt.day}/${postApi.createdAt.month}/${postApi.createdAt.year}",
+                              style: TextStyle(color: Colors.black.withOpacity(0.6)),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(postApi.description,
+                              style: TextStyle(color: Colors.black.withOpacity(0.6)),
+                            ),
+                          ),
+                          Center(
+                            child: _controller!.value.isInitialized
+                                ? Stack(
+                              children: [
+                                InkWell(
+                                  onTap: (){
+                                    setState(() {
+                                      if(isplay){
+                                        isplay = false;
+                                      }else{
+                                        isplay = true;
+                                      }
+                                    });
+                                  },
+                                  child: AspectRatio(
+                                    aspectRatio: _controller!.value.aspectRatio,
+                                    child: VideoPlayer(_controller!),
+                                  ),
+                                ),
+                                isplay ?
+                                Positioned(
+                                    top: 70,
+                                    left: 150,
+                                    child: Center(
+                                      child: FloatingActionButton(
+                                        backgroundColor: Colors.black54,
+                                        onPressed: () {
+                                          startTimer();
+                                          setState(() {
+                                            _controller!.value.isPlaying
+                                                ? _controller!.pause()
+                                                : _controller!.play();
+                                          });
+                                        },
+                                        child: Icon(
+                                          _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
+                                          size: 40,
+                                        ),
+                                      ),
+                                    )
+                                ) : Container(),
+
+                              ],
+                            )
+                                : Container(),
+                          ),
+                          ButtonBar(
+                            alignment: MainAxisAlignment.start,
+                            children: [
+                              TextButton.icon(
+                                onPressed: () {
+                                  // Respond to button press
+                                },
+                                label: const Text("Add Comment",style: TextStyle(color: Colors.green),),
+                                icon: Icon(Icons.mode_comment_outlined, size: 18,color: Colors.green,),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
 
-                ],
-              );
+                  ],
+                );
+              }
 
             },
           )
