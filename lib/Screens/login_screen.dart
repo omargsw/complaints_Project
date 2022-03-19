@@ -3,6 +3,7 @@ import 'package:complaints_project/Screens/nav_bar.dart';
 import 'package:complaints_project/Widgets/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'signup_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -25,6 +26,31 @@ class _LoginScreenState extends State<LoginScreen> {
   var userId;
   Icon iconpass = Icon(Icons.visibility,color: ColorForDesign().blue);
 
+  Future<bool> loginIn(var email, var pass) async {
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/login.php';
+    final response = await http.post(Uri.parse(url), body: {
+      "email": email.toString(),
+      "password": pass,
+    });
+    var json = jsonDecode(response.body);
+    if(json['error']){
+      _showErrorDialog("Invalid user name or password");
+    } else {
+      SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+      sharedPreferences.setInt('userID', json['user']['id']);
+      sharedPreferences.setString('name', json['user']['name'] );
+      sharedPreferences.setString('email', json['user']['email'] );
+      sharedPreferences.setString('phone', json['user']['phone'] );
+      sharedPreferences.setString('image', json['user']['image'] );
+      sharedPreferences.setInt('typeID', json['user']['user_type_id'] );
+
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (BuildContext context) => const NavBar()),
+              (Route<dynamic> route) => false);
+    }
+    return true;
+  }
+
   void _showErrorDialog(String msg) {
     showDialog(
         context: context,
@@ -35,6 +61,9 @@ class _LoginScreenState extends State<LoginScreen> {
             FlatButton(
               child: Text('Okay'),
               onPressed: (){
+                setState(() {
+                  isclick = false;
+                });
                 Navigator.of(ctx).pop();
               },
             )
@@ -174,23 +203,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           // ),
                           RaisedButton(
                             onPressed: () async {
-                              //   var emailtxt = email.text;
-                              //   var passtxt = pass.text;
-                              // if (!_form.currentState!.validate()) {
-                              //   // Invalid!
-                              //   return;
-                              // }else if(_form.currentState!.validate()) {
-
-                              //   _form.currentState!.save();
-                              // }
+                              if (!_form.currentState!.validate()) {
+                                // Invalid!
+                                return;
+                              }else if(_form.currentState!.validate()) {
+                                loginIn(email.text, pass.text);
+                                _form.currentState!.save();
+                              }
                               setState(() {
                                 isclick = true;
                               });
-                              Navigator.of(context).pushReplacement(
-                                  MaterialPageRoute(
-                                    builder: (context)=>NavBar(),
-                                  )
-                              );
                             },
                             child: Padding(
                               padding: const EdgeInsets.only(left:75,right:75),
@@ -226,6 +248,11 @@ class _LoginScreenState extends State<LoginScreen> {
                                     ]),
                               ),
                             ),
+                          ),
+                          const SizedBox(height: 20,),
+                          Image.asset('assets/images/logo.jpeg',
+                            height: 150,
+                            width: 150,
                           ),
 
                         ],

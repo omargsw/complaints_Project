@@ -82,23 +82,6 @@ class _HomePageState extends State<HomePage> {
                             style: TextStyle(color: Colors.black.withOpacity(0.6)),
                           ),
                         ),
-                        ButtonBar(
-                          alignment: MainAxisAlignment.start,
-                          children: [
-                            FlatButton(
-                              onPressed: () {
-                                // Perform some action
-                              },
-                              child: const Text('ACTION 1'),
-                            ),
-                            FlatButton(
-                              onPressed: () {
-                                // Perform some action
-                              },
-                              child: const Text('ACTION 2'),
-                            ),
-                          ],
-                        ),
                         Center(
                           child: _controller!.value.isInitialized
                               ? Stack(
@@ -144,6 +127,17 @@ class _HomePageState extends State<HomePage> {
                             ],
                           )
                               : Container(),
+                        ),
+                        ButtonBar(
+                          alignment: MainAxisAlignment.start,
+                          children: [
+                            FlatButton(
+                              onPressed: () {
+                                // Perform some action
+                              },
+                              child: const Text('Add Comment'),
+                            ),
+                          ],
                         ),
                       ],
                     ),

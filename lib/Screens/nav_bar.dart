@@ -1,8 +1,14 @@
+import 'dart:convert';
+
+import 'package:complaints_project/Model/user_info.dart';
 import 'package:complaints_project/Screens/profile_screen.dart';
 import 'package:complaints_project/Widgets/colors.dart';
 import 'package:complaints_project/Widgets/drawer.dart';
+import 'package:complaints_project/Widgets/drawer_without_user.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
+import '../main.dart';
 import 'add_post_screen.dart';
 import 'home_page.dart';
 import 'notifications_screen.dart';
@@ -15,17 +21,61 @@ class NavBar extends StatefulWidget {
 }
 
 class _NavBarState extends State<NavBar> {
+  var id = sharedPreferences!.getInt('userID');
 
   int _currentIndex = 0;
-  static const List<Widget> _pages = <Widget>[
-    HomePage(),
-    ProfileScreen(),
-    Notifications(),
-    AddPost(),
-  ];
+
+
+  List<UserInfoApi> user = [];
+  Future UserInfo() async {
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/UserInfo.php?userid=${id.toString()}';
+    final response = await http.get(Uri.parse(url));
+    var json = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      final List<UserInfoApi> userlist = userInfoApiFromJson(response.body);
+      return userlist;
+    }
+  }
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    UserInfo().then((userlist){
+      setState(() {
+        user = userlist;
+      });
+    });
+  }
+  void _showErrorSnackBar(BuildContext context) {
+    final snackBar = SnackBar(
+      content: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: const [
+          Icon(Icons.error_outline, size: 20,color: Colors.black,),
+          SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              "You must login in before",
+              style: TextStyle(fontSize: 15),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: Colors.red,
+      duration: Duration(seconds: 3),
+      behavior: SnackBarBehavior.floating,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> _pages = <Widget>[
+      HomePage(),
+      ProfileScreen(user: user,),
+      Notifications(),
+      AddPost(user: user,),
+    ];
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     void _onItemTapped(int index) {
@@ -36,7 +86,7 @@ class _NavBarState extends State<NavBar> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("App title", style: TextStyle(color: ColorForDesign().white, fontSize: 30),),
+        title: Text("onTheGo", style: TextStyle(color: ColorForDesign().white, fontSize: 30),),
         centerTitle: true,
         backgroundColor: ColorForDesign().blue,
       ),
@@ -51,24 +101,24 @@ class _NavBarState extends State<NavBar> {
         onTap: _onItemTapped,
         items: const [
           BottomNavigationBarItem(
-            title: Text('Home'),
+            label: 'Home',
             icon: Icon(Icons.home),
           ),
           BottomNavigationBarItem(
-            title: Text('Profile'),
+            label: 'Profile',
             icon: Icon(Icons.person),
           ),
           BottomNavigationBarItem(
-            title: Text('Notification'),
+            label: 'Notification',
             icon: Icon(Icons.notifications),
           ),
           BottomNavigationBarItem(
-            title: Text('Add Post'),
+            label: 'Add Post',
             icon: Icon(Icons.add),
           ),
         ],
       ),
-      drawer: const NavDrawer(),
+      drawer: id == null ? const DrawerWithoutUser() :NavDrawer(user: user,),
       body: Center(
         child: _pages.elementAt(_currentIndex),
       )

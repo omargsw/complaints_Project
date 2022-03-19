@@ -22,13 +22,18 @@ class _SplashScreenState extends State<SplashScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Center(
-        child: Text("Welcome Back" ,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-              color: ColorForDesign().blue,
-              fontSize: 60
-          ),)
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Center(
+            child: Image.asset('assets/images/logo.jpeg',
+              height: 250,
+              width: 250,
+            ),
+          ),
+          const SizedBox(height: 250,),
+          CircularProgressIndicator(color: ColorForDesign().blue,)
+        ],
       ),
     );
   }

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "54899734036",
+    "project_id": "onthego-2d485",
+    "storage_bucket": "onthego-2d485.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:54899734036:android:4d8161262699f88063d901",
+        "android_client_info": {
+          "package_name": "com.complaints.complaints_project"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "54899734036-aqod37brdo1juc2dvnhg7o36p47c567t.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXWT9PhnZ4bPr7PuDxLC4yo7NZhb8KroI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "54899734036-aqod37brdo1juc2dvnhg7o36p47c567t.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,8 +1,11 @@
 import 'dart:convert';
 
+import 'package:complaints_project/Screens/home_page.dart';
+import 'package:complaints_project/Screens/nav_bar.dart';
 import 'package:complaints_project/Widgets/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'login_screen.dart';
 
@@ -40,6 +43,38 @@ class _SignUpState extends State<SignUp> {
   var num=TextEditingController();
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey();
 
+  Future signUp(var email, var name, var num, var pass,var typeid) async {
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/signup.php';
+    final response = await http.post(Uri.parse(url), body: {
+      "name": name,
+      "email": email.toString(),
+      "password": pass,
+      "phone": num,
+      "user_type_id" : typeid,
+    });
+    var json = jsonDecode(response.body);
+    if(json['error']){
+      _showErrorDialog("User already registered");
+
+    } else {
+      SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
+      sharedPreferences.setInt('userID', json['user']['id']);
+      sharedPreferences.setString('name', json['user']['name'] );
+      sharedPreferences.setString('email', json['user']['email'] );
+      sharedPreferences.setString('phone', json['user']['phone'] );
+      sharedPreferences.setString('image', json['user']['image'] );
+      sharedPreferences.setInt('typeID', json['user']['user_type_id'] );
+
+      Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (BuildContext context) => const NavBar()),
+              (Route<dynamic> route) => false);
+
+      print('SignUp Successfully');
+    }
+    return true;
+  }
+
+
   void _showErrorDialog(String msg) {
     showDialog(
         context: context,
@@ -50,6 +85,9 @@ class _SignUpState extends State<SignUp> {
             FlatButton(
               child: Text('Okay'),
               onPressed: (){
+                setState(() {
+                  isclick = false;
+                });
                 Navigator.of(ctx).pop();
               },
             )
@@ -258,20 +296,11 @@ class _SignUpState extends State<SignUp> {
                           const SizedBox(height: 20,),
                           RaisedButton(
                             onPressed: () async {
-                              var nametxt = name.text;
-                              var emailtxt = email.text;
-                              var passwordtxt = pass.text;
-                              var phonetxt = num.text;
-                              print(nametxt);
-                              print(emailtxt);
-                              print(passwordtxt);
-                              print(phonetxt.toString());
                               if (!_form.currentState!.validate()) {
                                 // Invalid!
                                 return;
                               }else {
-
-
+                                signUp(email.text, name.text, num.text, pass.text, "1");
                                 setState(() {
                                   isclick = true;
                                 });
