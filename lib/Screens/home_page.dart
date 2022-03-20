@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:complaints_project/Widgets/colors.dart';
+import 'package:complaints_project/Widgets/video_player.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:http/http.dart' as http;
@@ -49,18 +50,18 @@ class _HomePageState extends State<HomePage> {
         posts = postlist;
       });
     });
-    _controller = VideoPlayerController.network(
-        'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4')
-      ..initialize().then((_) {
-        // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
-        setState(() {});
-      });
+    // _controller = VideoPlayerController.network(
+    //     'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4')
+    //   ..initialize().then((_) {
+    //     // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
+    //     setState(() {});
+    //   });
   }
-  @override
-  void dispose() {
-    super.dispose();
-    _controller!.dispose();
-  }
+  // @override
+  // void dispose() {
+  //   super.dispose();
+  //   _controller!.dispose();
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -108,52 +109,7 @@ class _HomePageState extends State<HomePage> {
                               style: TextStyle(color: Colors.black.withOpacity(0.6)),
                             ),
                           ),
-                          Center(
-                            child: _controller!.value.isInitialized
-                                ? Stack(
-                              children: [
-                                InkWell(
-                                  onTap: (){
-                                    setState(() {
-                                      if(isplay){
-                                        isplay = false;
-                                      }else{
-                                        isplay = true;
-                                      }
-                                    });
-                                  },
-                                  child: AspectRatio(
-                                    aspectRatio: _controller!.value.aspectRatio,
-                                    child: VideoPlayer(_controller!),
-                                  ),
-                                ),
-                                isplay ?
-                                Positioned(
-                                    top: 70,
-                                    left: 150,
-                                    child: Center(
-                                      child: FloatingActionButton(
-                                        backgroundColor: Colors.black54,
-                                        onPressed: () {
-                                          startTimer();
-                                          setState(() {
-                                            _controller!.value.isPlaying
-                                                ? _controller!.pause()
-                                                : _controller!.play();
-                                          });
-                                        },
-                                        child: Icon(
-                                          _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
-                                          size: 40,
-                                        ),
-                                      ),
-                                    )
-                                ) : Container(),
-
-                              ],
-                            )
-                                : Container(),
-                          ),
+                          VideoPlayerWidget(url: postApi.image,type: postApi.type,),
                           ButtonBar(
                             alignment: MainAxisAlignment.start,
                             children: [
