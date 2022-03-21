@@ -56,6 +56,28 @@ class _AddPostState extends State<AddPost> {
     print(response.body);
   }
 
+  void _showDoneSnackBar(BuildContext context) {
+    final snackBar = SnackBar(
+      content: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: const [
+          Icon(Icons.done_outline, size: 20,color: Colors.green,),
+          SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              "Post Uploaded",
+              style: TextStyle(fontSize: 15),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: Colors.black45,
+      duration: Duration(seconds: 3),
+      behavior: SnackBarBehavior.floating,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -87,11 +109,11 @@ class _AddPostState extends State<AddPost> {
           "status" : status,
           "time": FieldValue.serverTimestamp(),
           };
-
           desc.clear();
           await _firestore.collection('posts').doc(email).collection('posts').add(post);
+            _showDoneSnackBar(context);
 
-        }
+          }
         },
         label: const Text('Upload Post'),
         icon: const Icon(Icons.post_add),
@@ -186,7 +208,7 @@ class _AddPostState extends State<AddPost> {
                         // print(path);
                         setState(() {
                           file = File(path);
-                          status = "video";
+                          status = "Video";
                           //uplfile = true;
                         });
                       },
@@ -206,7 +228,7 @@ class _AddPostState extends State<AddPost> {
                         print("Path is ===="+path);
                         setState(() {
                           file = File(path);
-                          status = "image";
+                          status = "Image";
                           //uplfile = true;
                         });
                       },
@@ -215,17 +237,36 @@ class _AddPostState extends State<AddPost> {
                     )
                   ],
                 ),
-                // Builder(
-                //   builder: (context) => Center(
-                //     child: ButtonWidget(
-                //       text: 'Upload Post',
-                //       width: 300,
-                //       onClicked: () async {
-                //
-                //       },
-                //     ),
-                //   ),
-                // ),
+                const SizedBox(height: 20,),
+                file != null ?
+                Padding(
+                  padding: const EdgeInsets.all(15.0),
+                  child: Center(
+                    child: SizedBox(
+                      height: 200,
+                      width: 200,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                              color: Colors.green,
+                              width: 2.0,
+                              style: BorderStyle.solid),
+                          borderRadius: const BorderRadius.all(
+                            Radius.circular(100),
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.done_outline,color: Colors.green,size: 60,),
+                            const SizedBox(height: 20,),
+                            Text("$status is uploaded"),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ) : Container()
               ],
             );
 

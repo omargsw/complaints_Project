@@ -1,9 +1,13 @@
 import 'dart:async';
 
 import 'package:complaints_project/Widgets/colors.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:http/http.dart' as http;
 
+import '../Model/mypostApi.dart';
+import '../Widgets/video_player.dart';
 import 'edit_post.dart';
 
 class MyPosts extends StatefulWidget {
@@ -14,75 +18,80 @@ class MyPosts extends StatefulWidget {
 }
 
 class _MyPostsState extends State<MyPosts> {
-  VideoPlayerController? _controller;
-  bool isplay = true;
 
-  void startTimer() {
-    Timer(
-        Duration(seconds: 2), (){
-      setState(() {
-        isplay = false;
-      });
-
-    });
+  List<MyPostApi> myposts = [];
+  Future MyPosts() async {
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/fetchPost.php';
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final List<MyPostApi> postlist = myPostApiFromJson(response.body);
+      return postlist;
+    }
+  }
+  Future RemoveProducts(var id) async {
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/removePost.php';
+    final response = await http.post(Uri.parse(url),
+        body: {"id": id.toString(),}
+    );
+    print(response.body);
   }
 
-  @override
-  void initState() {
-    super.initState();
-    _controller = VideoPlayerController.network(
-        'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4')
-      ..initialize().then((_) {
-        // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
-        setState(() {});
-      });
-  }
-  @override
-  void dispose() {
-    super.dispose();
-    _controller!.dispose();
-  }
-
-  void _showErrorDialog() {
+  void _showErrorDialog(int postId) {
     showDialog<String>(
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
             shape: const RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(20.0))),
-            backgroundColor: ColorForDesign().white,
+            backgroundColor: Colors.white,
             content: Text("Are you sure to delete this post ?",
                 textAlign: TextAlign.left,
                 style: TextStyle(
                   color: ColorForDesign().blue,
                 )),
             actions: <Widget>[
-              Row(
-                children: [
-                  TextButton(
-                    onPressed: (){
-                      Navigator.of(context).pop();
-                    },
-                    child: Text('No',
-                        style: TextStyle(
-                          color: ColorForDesign().blue,
-                        )),
-                  ),
-                  TextButton(
-                    onPressed: (){
-
-                    },
-                    child: Text('Yes',
-                        style: TextStyle(
-                          color: ColorForDesign().blue,
-                        )),
-                  ),
-                ],
+              TextButton(
+                onPressed: (){
+                  Navigator.of(context).pop();
+                },
+                child: Text('NO',
+                    style: TextStyle(
+                      color: ColorForDesign().blue,
+                    )),
               ),
+              TextButton(
+                onPressed: (){
+                  RemoveProducts(postId);
+                  setState(() {
+                    MyPosts().then((postlist){
+                      setState(() {
+                        myposts = postlist;
+                      });
+                    });
+                  });
+                  Navigator.of(context).pop();
+                },
+                child: Text('YES',
+                    style: TextStyle(
+                      color: ColorForDesign().blue,
+                    )),
+              ),
+
             ],
           );
         });
   }
+
+  @override
+  void initState() {
+    super.initState();
+    MyPosts().then((postlist){
+      setState(() {
+        myposts = postlist;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -94,113 +103,95 @@ class _MyPostsState extends State<MyPosts> {
       ),
       body: Container(
           decoration: BoxDecoration(
-              color: ColorForDesign().lightblue,
-              borderRadius: BorderRadius.only(topLeft: const Radius.circular(0), topRight: Radius.circular(40))
-
+            color: ColorForDesign().lightblue,
           ),
-          child: ListView.builder(
+          child: myposts.isEmpty || myposts == null ? Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Center(child: Container(child: const CircularProgressIndicator())),
+            ],
+          ) :
+          ListView.builder(
             scrollDirection: Axis.vertical,
-            itemCount: 1,
+            itemCount: myposts.length,
             itemBuilder: (context, index) {
-              return Column(
-                children: <Widget>[
-                  Card(
-                    color: Colors.white,
-                    clipBehavior: Clip.antiAlias,
-                    child: Column(
-                      children: [
-                        ListTile(
-                          leading: const CircleAvatar(
-                            radius: 28,
-                            backgroundImage: AssetImage('assets/images/image.jpg'),
-                          ),
-                          title: const Text('name'),
-                          subtitle: Text(
-                            '19/2/2022',
-                            style: TextStyle(color: Colors.black.withOpacity(0.6)),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Text(
-                            'Greyhound divisively hello coldly wonderfully marginally far upon excluding.',
-                            style: TextStyle(color: Colors.black.withOpacity(0.6)),
-                          ),
-                        ),
-                        ButtonBar(
-                          alignment: MainAxisAlignment.start,
-                          children: [
-                            OutlinedButton.icon(
-                              onPressed: () {
-                                Navigator.of(context).push(MaterialPageRoute(
-                                    builder: (BuildContext context) => EditPost())
-                                );
-                              },
-                              icon: const Icon(Icons.edit, size: 18,color: Colors.green,),
-                              label: const Text("Edit",style: TextStyle(color: Colors.green),),
+              MyPostApi postApi = myposts[index];
+              if(myposts.isEmpty || myposts == null){
+                return Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: const [
+                    CircularProgressIndicator(),
+                  ],
+                );
+              }else{
+                return Column(
+                  children: <Widget>[
+                    Card(
+                      color: Colors.white,
+                      clipBehavior: Clip.antiAlias,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ListTile(
+                            leading: CircleAvatar(
+                                radius: 28,
+                                backgroundImage: NetworkImage('https://abulsamrie11.000webhostapp.com/image/${postApi.userImage}')
                             ),
-                            OutlinedButton.icon(
-                              onPressed: () {
-                                _showErrorDialog();
-                              },
-                              icon: const Icon(Icons.delete, size: 18,color: Colors.red,),
-                              label: const Text("Delete",style: TextStyle(color: Colors.red),),
-                            )
-                          ],
-                        ),
-                        Center(
-                          child: _controller!.value.isInitialized
-                              ? Stack(
+                            title: Text(postApi.name),
+                            subtitle: Text("${postApi.createdAt.day}/${postApi.createdAt.month}/${postApi.createdAt.year}",
+                              style: TextStyle(color: Colors.black.withOpacity(0.6)),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Text(postApi.description,
+                              style: TextStyle(color: Colors.black.withOpacity(0.6)),
+                            ),
+                          ),
+                          ButtonBar(
+                            alignment: MainAxisAlignment.start,
                             children: [
-                              InkWell(
-                                onTap: (){
-                                  setState(() {
-                                    if(isplay){
-                                      isplay = false;
-                                    }else{
-                                      isplay = true;
-                                    }
+                              OutlinedButton.icon(
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) => EditPost(postID: postApi.id,)),
+                                  ).then((value) {
+                                    setState(() {
+                                      if (value == true) {
+                                        MyPosts().then((postlist){
+                                          setState(() {
+                                            myposts = postlist;
+                                          });
+                                        });
+                                      } else {
+                                        null;
+                                      }
+                                    });
                                   });
                                 },
-                                child: AspectRatio(
-                                  aspectRatio: _controller!.value.aspectRatio,
-                                  child: VideoPlayer(_controller!),
-                                ),
+                                icon: const Icon(Icons.edit, size: 18,color: Colors.green,),
+                                label: const Text("Edit",style: TextStyle(color: Colors.green),),
                               ),
-                              isplay ?
-                              Positioned(
-                                  top: 70,
-                                  left: 150,
-                                  child: Center(
-                                    child: FloatingActionButton(
-                                      backgroundColor: Colors.black54,
-                                      onPressed: () {
-                                        startTimer();
-                                        setState(() {
-                                          _controller!.value.isPlaying
-                                              ? _controller!.pause()
-                                              : _controller!.play();
-                                        });
-                                      },
-                                      child: Icon(
-                                        _controller!.value.isPlaying ? Icons.pause : Icons.play_arrow,
-                                        size: 40,
-                                      ),
-                                    ),
-                                  )
-                              ) : Container(),
-
+                              OutlinedButton.icon(
+                                onPressed: () {
+                                  _showErrorDialog(postApi.id);
+                                },
+                                icon: const Icon(Icons.delete, size: 18,color: Colors.red,),
+                                label: const Text("Delete",style: TextStyle(color: Colors.red),),
+                              )
                             ],
-                          )
-                              : Container(),
-                        ),
-                      ],
+                          ),
+                          VideoPlayerWidget(url: postApi.image,type: postApi.type,),
+                        ],
+                      ),
                     ),
-                  ),
 
 
-                ],
-              );
+                  ],
+                );
+              }
 
             },
           )

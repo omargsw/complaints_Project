@@ -88,7 +88,15 @@ class _VideoPlayerWidgetState extends State<VideoPlayerWidget> {
 
           ],
         )
-            : Container(),
+            : Container(
+          height: 200,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: const [
+              CircularProgressIndicator(),
+            ],
+          ),
+        ),
       ) :
       Image.network('${widget.url}'),
     );

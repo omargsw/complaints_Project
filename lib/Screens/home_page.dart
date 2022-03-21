@@ -18,28 +18,15 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
-  VideoPlayerController? _controller;
-  bool isplay = true;
 
   List<PostApi> posts = [];
   Future Posts() async {
     String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/fetchPost.php';
     final response = await http.get(Uri.parse(url));
-    var json = jsonDecode(response.body);
     if (response.statusCode == 200) {
       final List<PostApi> postlist = postApiFromJson(response.body);
       return postlist;
     }
-  }
-
-  void startTimer() {
-    Timer(
-        Duration(seconds: 2), (){
-          setState(() {
-            isplay = false;
-          });
-
-            });
   }
 
   @override
@@ -50,18 +37,7 @@ class _HomePageState extends State<HomePage> {
         posts = postlist;
       });
     });
-    // _controller = VideoPlayerController.network(
-    //     'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4')
-    //   ..initialize().then((_) {
-    //     // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
-    //     setState(() {});
-    //   });
   }
-  // @override
-  // void dispose() {
-  //   super.dispose();
-  //   _controller!.dispose();
-  // }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +47,13 @@ class _HomePageState extends State<HomePage> {
           decoration: BoxDecoration(
               color: ColorForDesign().lightblue,
           ),
-          child: ListView.builder(
+          child: posts.isEmpty || posts == null ? Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Center(child: Container(child: const CircularProgressIndicator())),
+            ],
+          ) :
+          ListView.builder(
             scrollDirection: Axis.vertical,
             itemCount: posts.length,
             itemBuilder: (context, index) {
@@ -91,7 +73,6 @@ class _HomePageState extends State<HomePage> {
                       clipBehavior: Clip.antiAlias,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-
                         children: [
                           ListTile(
                             leading: CircleAvatar(
