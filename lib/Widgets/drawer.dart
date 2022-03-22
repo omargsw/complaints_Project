@@ -4,12 +4,14 @@ import 'package:complaints_project/Screens/my_posts.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../Screens/add_post_screen.dart';
+import '../Screens/profile_screen.dart';
 import '../main.dart';
 import 'colors.dart';
 
 class NavDrawer extends StatefulWidget {
-  List<UserInfoApi>? user;
-  NavDrawer({Key? key,this.user}) : super(key: key);
+  final List<UserInfoApi>? user;
+  const NavDrawer({Key? key,this.user}) : super(key: key);
 
   @override
   _NavDrawerState createState() => _NavDrawerState();
@@ -38,53 +40,67 @@ class _NavDrawerState extends State<NavDrawer> {
               }else{
                 return Column(
                   children: [
-                    Container(
-                      child: InkWell(
-                        onTap: (){
-                          // Navigator.of(context).push(
-                          //     MaterialPageRoute(
-                          //       builder: (context)=>ProfileScreen(),
-                          //     )
-                          // );
-                        },
-                        child: UserAccountsDrawerHeader(
-                          decoration: BoxDecoration(
-                            color: ColorForDesign().blue,
-                            borderRadius: const BorderRadius.only(
-                              bottomRight: Radius.circular(30),
-                            ),
+                    InkWell(
+                      onTap: (){
+
+                      },
+                      child: UserAccountsDrawerHeader(
+                        decoration: BoxDecoration(
+                          color: ColorForDesign().blue,
+                          borderRadius: const BorderRadius.only(
+                            bottomRight: Radius.circular(30),
                           ),
-                          accountName: Text(userApi.name),
-                          accountEmail: Text(userApi.email),
-                          currentAccountPicture: ClipOval(
-                            child: Image.network('https://abulsamrie11.000webhostapp.com/image/${userApi.image}',
-                              width: 75,
-                              height: 75,
-                              fit: BoxFit.cover,
-                            ),
+                        ),
+                        accountName: Text(userApi.name),
+                        accountEmail: Text(userApi.email),
+                        currentAccountPicture: ClipOval(
+                          child: Image.network('https://abulsamrie11.000webhostapp.com/image/${userApi.image}',
+                            width: 75,
+                            height: 75,
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
                     ),
                     ListTile(
                         title: const Text('My Posts',style: TextStyle(),),
-                        leading: Icon(Icons.assignment),
-                        trailing: Icon(Icons.arrow_right),
+                        leading: Icon(Icons.assignment_outlined,color: ColorForDesign().blue,),
+                        trailing: const Icon(Icons.arrow_right),
                         onTap: (){
                           Navigator.of(context).push(MaterialPageRoute(
                               builder: (BuildContext context) => MyPosts())
                           );
                         }
                     ),
+                    ListTile(
+                        title: const Text('Add Posts',style: TextStyle(),),
+                        leading: Icon(Icons.post_add,color: ColorForDesign().blue,),
+                        trailing: const Icon(Icons.arrow_right),
+                        onTap: (){
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (BuildContext context) => AddPost(user: widget.user,show: true,))
+                          );
+                        }
+                    ),
+                    ListTile(
+                        title: const Text('Account Setting',style: TextStyle(),),
+                        leading: Icon(Icons.person_outline,color: ColorForDesign().blue,),
+                        trailing: const Icon(Icons.arrow_right),
+                        onTap: (){
+                          Navigator.of(context).push(MaterialPageRoute(
+                              builder: (BuildContext context) => ProfileScreen(user: widget.user,show: true,))
+                          );
+                        }
+                    ),
                     ListTile(title: const Text('Logout',style: TextStyle(),),
-                        leading: Icon(Icons.logout),
-                        trailing: Icon(Icons.arrow_right),
+                        leading: Icon(Icons.logout,color: ColorForDesign().blue,),
+                        trailing: const Icon(Icons.arrow_right),
                         onTap: () async {
                           SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
                           sharedPreferences.clear();
                           // await FirebaseAuth.instance.signOut();
                           Navigator.of(context).pushAndRemoveUntil(
-                              MaterialPageRoute(builder: (BuildContext context) => LoginScreen()),
+                              MaterialPageRoute(builder: (BuildContext context) => const LoginScreen()),
                                   (Route<dynamic> route) => false);
                         }),
                   ],

@@ -22,9 +22,9 @@ class NavBar extends StatefulWidget {
 
 class _NavBarState extends State<NavBar> {
   var id = sharedPreferences!.getInt('userID');
+  String title = "onTheGo";
 
   int _currentIndex = 0;
-
 
   List<UserInfoApi> user = [];
   Future UserInfo() async {
@@ -68,25 +68,52 @@ class _NavBarState extends State<NavBar> {
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
   }
 
+
+
   @override
   Widget build(BuildContext context) {
+    void appTitle(){
+      switch(_currentIndex) {
+        case 0: {
+          title = "onTheGo";
+        }
+        break;
+        case 1: {
+          title = "Edit Profile" ;
+        }
+        break;
+        case 2: {
+          title = "Notifications" ;
+        }
+        break;
+        case 3: {
+          title = "Add Post" ;
+        }
+        break;
+        default: {
+          title = "onTheGo";
+        }
+        break;
+      }
+    }
     final List<Widget> _pages = <Widget>[
       HomePage(),
-      ProfileScreen(user: user,),
+      ProfileScreen(user: user,show: false),
       Notifications(),
-      AddPost(user: user,),
+      AddPost(user: user,show: false),
     ];
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     void _onItemTapped(int index) {
       setState(() {
         _currentIndex = index;
+        appTitle();
       });
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text("onTheGo", style: TextStyle(color: ColorForDesign().white, fontSize: 30),),
+        title: Text(title, style: TextStyle(color: ColorForDesign().white, fontSize: 25),),
         centerTitle: true,
         backgroundColor: ColorForDesign().blue,
       ),

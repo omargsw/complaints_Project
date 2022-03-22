@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:complaints_project/Widgets/colors.dart';
+import 'package:complaints_project/main.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:http/http.dart' as http;
 
 import '../Model/mypostApi.dart';
+import '../Widgets/appbar.dart';
 import '../Widgets/video_player.dart';
 import 'edit_post.dart';
 
@@ -18,10 +20,12 @@ class MyPosts extends StatefulWidget {
 }
 
 class _MyPostsState extends State<MyPosts> {
+  var id = sharedPreferences!.getInt('userID');
+  bool isloading = true;
 
   List<MyPostApi> myposts = [];
   Future MyPosts() async {
-    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/fetchPost.php';
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/fetchMyPost.php?user_id='+id.toString();
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final List<MyPostApi> postlist = myPostApiFromJson(response.body);
@@ -36,6 +40,27 @@ class _MyPostsState extends State<MyPosts> {
     print(response.body);
   }
 
+  void _showErrorSnackBar(BuildContext context) {
+    final snackBar = SnackBar(
+      content: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: const [
+          Icon(Icons.error_outline, size: 20,color: Colors.black,),
+          SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              "The post has been deleted",
+              style: TextStyle(fontSize: 15),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: Colors.red,
+      duration: Duration(seconds: 3),
+      behavior: SnackBarBehavior.floating,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
   void _showErrorDialog(int postId) {
     showDialog<String>(
         context: context,
@@ -69,6 +94,7 @@ class _MyPostsState extends State<MyPosts> {
                       });
                     });
                   });
+                  _showErrorSnackBar(context);
                   Navigator.of(context).pop();
                 },
                 child: Text('YES',
@@ -96,19 +122,15 @@ class _MyPostsState extends State<MyPosts> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ColorForDesign().lightblue,
-      appBar: AppBar(
-        title: Text("My Posts", style: TextStyle(color: ColorForDesign().white,),),
-        centerTitle: true,
-        backgroundColor: ColorForDesign().blue,
-      ),
+      appBar: AppAppBar(title: "My Posts",show: true),
       body: Container(
           decoration: BoxDecoration(
             color: ColorForDesign().lightblue,
           ),
-          child: myposts.isEmpty || myposts == null ? Column(
+          child: myposts.isEmpty || myposts==null ? Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Center(child: Container(child: const CircularProgressIndicator())),
+              Center(child: Container(child: const Text("You don't have any posts",style: TextStyle(color: Colors.black45),))),
             ],
           ) :
           ListView.builder(

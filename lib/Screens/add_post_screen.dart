@@ -14,12 +14,14 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
 import 'package:http/http.dart' as http;
 
+import '../Widgets/appbar.dart';
 import '../main.dart';
 import 'login_screen.dart';
 
 class AddPost extends StatefulWidget {
-  List<UserInfoApi>? user;
-  AddPost({Key? key,this.user}) : super(key: key);
+  final List<UserInfoApi>? user;
+  bool show;
+  AddPost({Key? key,this.user,required this.show}) : super(key: key);
 
   @override
   _AddPostState createState() => _AddPostState();
@@ -120,6 +122,7 @@ class _AddPostState extends State<AddPost> {
         backgroundColor: ColorForDesign().blue,
       ),
       backgroundColor: ColorForDesign().lightblue,
+      appBar: AppAppBar(title: "Notifications",show: widget.show),
       body: widget.user!.isEmpty || widget.user == null ?
       Center(
         child: Column(
@@ -140,6 +143,7 @@ class _AddPostState extends State<AddPost> {
         ),
       ) :
       ListView.builder(
+        physics: const NeverScrollableScrollPhysics(),
         itemCount: widget.user!.length,
         itemBuilder: (context, index) {
           UserInfoApi userApi = widget.user![index];
@@ -156,15 +160,6 @@ class _AddPostState extends State<AddPost> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Padding(padding: const EdgeInsets.fromLTRB(30, 20, 20, 0),
-                  child: Text("Add post here",
-                    style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        color: ColorForDesign().blue,
-                        fontSize: 20
-                    ),
-                  ),
-                ),
                 Form(
                   key: _form,
                   child: Container(
