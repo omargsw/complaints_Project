@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:complaints_project/Model/fetch_commentApi.dart';
 import 'package:complaints_project/Widgets/colors.dart';
 import 'package:complaints_project/Widgets/video_player.dart';
 import 'package:complaints_project/main.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:http/http.dart' as http;
 
 import '../Model/fetch_post.dart';
@@ -20,6 +22,11 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   var id = sharedPreferences!.getInt('userID');
+  var typeid = sharedPreferences!.getInt('user_type_id');
+  FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  var fbm = FirebaseMessaging.instance;
+  var title;
+  var body;
 
   GlobalKey<FormState> _form= GlobalKey<FormState>();
   var comment = TextEditingController();
@@ -54,8 +61,41 @@ class _HomePageState extends State<HomePage> {
     print(response.body);
   }
 
+  void _showErrorSnackBar(BuildContext context) {
+    final snackBar = SnackBar(
+      content: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: const [
+          Icon(Icons.error_outline, size: 20,color: Colors.black,),
+          SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              "You must login first",
+              style: TextStyle(fontSize: 15),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: Colors.red,
+      duration: Duration(seconds: 3),
+      behavior: SnackBarBehavior.floating,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
 
-  Widget bottomSheet(var post_id,var user_id) {
+  List userinfo = [];
+  Future UserInfo() async {
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/UserInfo.php?userid=${id.toString()}';
+    var response = await http.get(Uri.parse(url));
+    var responsebody = jsonDecode(response.body);
+    for(int i = 0 ; i < responsebody.length; i++){
+      userinfo.add(responsebody[i]);
+    }
+    print(userinfo);
+  }
+
+
+  Widget bottomSheet(var post_id,var user_id,var email) {
     return Container(
       height: 400.0,
       width: MediaQuery.of(context).size.width,
@@ -173,15 +213,34 @@ class _HomePageState extends State<HomePage> {
                       borderRadius: BorderRadius.all(Radius.circular(10),)
                     ),
                     child: IconButton(onPressed: () async {
-                      await insertComment(post_id.toString(), id.toString(), comment.text);
-                      setState(() {
-                        Comment(post_id).then((commentjson){
-                          setState(() {
-                            commentlist = commentjson;
+                      if (id == null){
+                        Navigator.of(context).pop();
+                        _showErrorSnackBar(context);
+                      }else{
+                        title = "${userinfo[0]['name']} added comment";
+                        body = comment.text;
+                        await insertComment(post_id.toString(), id.toString(), comment.text);
+                        setState(() {
+                          Comment(post_id).then((commentjson){
+                            setState(() {
+                              commentlist = commentjson;
+                            });
                           });
                         });
-                      });
-                      comment.clear();
+                        await _firestore.collection('notifications').doc().set({
+                          "name": userinfo[0]['name'],
+                          "email": userinfo[0]['email'],
+                          "image" : "https://abulsamrie11.000webhostapp.com/image/"+userinfo[0]['image'],
+                          "userid": id,
+                          "title" : title,
+                          "body" : body,
+                          "status": 1,
+                          "reciveremail" : email,
+                          "time": FieldValue.serverTimestamp(),
+                        });
+                        sendNotify(1, title, body, id);
+                        comment.clear();
+                      }
                     }, icon: Icon(Icons.send,color: ColorForDesign().blue,)),
                   )
                 ],
@@ -189,6 +248,36 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  var serverToken = "AAAADMhHdhQ:APA91bHBPPBkU6pleXgUu4b0S6_s-uNkrlPlgEzc9MrslbFo55RSoK"
+      "qVJeL7pjdR2g4r4KYrom-V4VxanIkAri89GIc7P4Ey5rW4ghUPXKmvBms5C8pomYCmrm0PybUafUrmJJkoB4IO";
+
+  sendNotify(int id , String title,String body,var userid) async {
+    await http.post(
+      Uri.parse('https://fcm.googleapis.com/fcm/send'),
+      headers: <String, String>{
+        'Content-Type': 'application/json',
+        'Authorization': 'key=$serverToken',
+      },
+      body: jsonEncode(
+        <String, dynamic>{
+          'notification': <String, dynamic>{
+            'body': body.toString(),
+            'title': title.toString(),
+          },
+          'priority': 'high',
+          'data': <String, dynamic>{
+            'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+            'id': id,
+            'status': 'done'
+          },
+          //الى من رح توصل الرساله
+
+          'to': '/topics/$userid'
+        },
       ),
     );
   }
@@ -202,6 +291,57 @@ class _HomePageState extends State<HomePage> {
         posts = postlist;
       });
     });
+    UserInfo();
+    //from firebase**********************************
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      RemoteNotification? notification = message.notification;
+      AndroidNotification? android = message.notification?.android;
+      if (notification != null && android != null) {
+        flutterLocalNotificationsPlugin.show(
+            notification.hashCode,
+            notification.title,
+            notification.body,
+            NotificationDetails(
+              android: AndroidNotificationDetails(
+                channel.id,
+                channel.name,
+                color: Colors.blue,
+                playSound: true,
+                icon: "@mipmap/ic_launcher",
+              ),
+            ));
+      }
+      // print(notification!.title);
+      // print(notification.body);
+    });
+    //when i click notify **************************************************
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      print('A new onMessageOpenedApp event was published!');
+      RemoteNotification? notification = message.notification;
+      AndroidNotification? android = message.notification?.android;
+      if (notification != null && android != null) {
+        showDialog(
+            context: context,
+            builder: (_) {
+              return AlertDialog(
+                title: Text(notification.title.toString()),
+                content: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [Text(notification.body.toString())],
+                  ),
+                ),
+              );
+            });
+      }
+    });
+
+    // FirebaseMessaging.instance.subscribeToTopic('$id');
+    // fbm.getToken().then((value) {
+    //   print("-----------------------------");
+    //   print(value);
+    //   print("-----------------------------");
+    // });
   }
 
   @override
@@ -256,6 +396,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           VideoPlayerWidget(url: postApi.image,type: postApi.type,),
+                          userinfo[0]['user_type_id'] == 1 ?
                           ButtonBar(
                             alignment: MainAxisAlignment.start,
                             children: [
@@ -269,12 +410,75 @@ class _HomePageState extends State<HomePage> {
                                   showModalBottomSheet(
                                     context: context,
                                     builder: ((builder){
-                                      return StatefulBuilder(builder: (context, setState) => bottomSheet(postApi.id,id),);
+                                      return StatefulBuilder(builder: (context, setState) => bottomSheet(postApi.id,id,postApi.email),);
                                     }
                                   ));
                                 },
                                 label: const Text("Add Comment",style: TextStyle(color: Colors.green),),
-                                icon: Icon(Icons.mode_comment_outlined, size: 18,color: Colors.green,),
+                                icon: const Icon(Icons.mode_comment_outlined, size: 18,color: Colors.green,),
+                              ),
+                            ],
+                          ) :
+                          ButtonBar(
+                            alignment: MainAxisAlignment.start,
+                            children: [
+                              TextButton.icon(
+                                onPressed: () async {
+                                  await Comment(postApi.id).then((commentjson){
+                                    setState(() {
+                                      commentlist = commentjson;
+                                    });
+                                  });
+                                  showModalBottomSheet(
+                                      context: context,
+                                      builder: ((builder){
+                                        return StatefulBuilder(builder: (context, setState) => bottomSheet(postApi.id,id,postApi.email),);
+                                      }
+                                      ));
+                                },
+                                label: const Text("Add Comment",style: TextStyle(color: Colors.green),),
+                                icon: const Icon(Icons.mode_comment_outlined, size: 18,color: Colors.green,),
+                              ),
+                              TextButton.icon(
+                                onPressed: () async {
+                                  showDialog<String>(
+                                      context: context,
+                                      builder: (BuildContext context) {
+                                        return AlertDialog(
+                                          shape: const RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.all(Radius.circular(20.0))),
+                                          backgroundColor: Colors.white,
+                                          content: Text("Are you sure to accept this post ?",
+                                              textAlign: TextAlign.left,
+                                              style: TextStyle(
+                                                color: ColorForDesign().blue,
+                                              )),
+                                          actions: <Widget>[
+                                            TextButton(
+                                              onPressed: (){
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: Text('NO',
+                                                  style: TextStyle(
+                                                    color: ColorForDesign().blue,
+                                                  )),
+                                            ),
+                                            TextButton(
+                                              onPressed: (){
+                                                Navigator.of(context).pop();
+                                              },
+                                              child: Text('YES',
+                                                  style: TextStyle(
+                                                    color: ColorForDesign().blue,
+                                                  )),
+                                            ),
+
+                                          ],
+                                        );
+                                      });
+                                },
+                                label: Text("Accept ",style: TextStyle(color: ColorForDesign().blue),),
+                                icon: Icon(Icons.access_time, size: 18,color: ColorForDesign().blue,),
                               ),
                             ],
                           ),
@@ -291,6 +495,27 @@ class _HomePageState extends State<HomePage> {
           )
 
       ),
+    );
+  }
+
+  Row buildNotificationOptionRow(String title, bool isActive) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w500,
+              color: Colors.grey[600]),
+        ),
+        Transform.scale(
+            scale: 0.7,
+            child: CupertinoSwitch(
+              value: isActive,
+              onChanged: (bool val) {},
+            ))
+      ],
     );
   }
 }

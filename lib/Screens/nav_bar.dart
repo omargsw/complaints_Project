@@ -46,29 +46,6 @@ class _NavBarState extends State<NavBar> {
       });
     });
   }
-  void _showErrorSnackBar(BuildContext context) {
-    final snackBar = SnackBar(
-      content: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: const [
-          Icon(Icons.error_outline, size: 20,color: Colors.black,),
-          SizedBox(width: 16),
-          Expanded(
-            child: Text(
-              "You must login in before",
-              style: TextStyle(fontSize: 15),
-            ),
-          ),
-        ],
-      ),
-      backgroundColor: Colors.red,
-      duration: Duration(seconds: 3),
-      behavior: SnackBarBehavior.floating,
-    );
-    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-  }
-
-
 
   @override
   Widget build(BuildContext context) {

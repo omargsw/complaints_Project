@@ -83,7 +83,9 @@ class _AddPostState extends State<AddPost> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: id == null ?
+          Container() :
+      FloatingActionButton.extended(
         onPressed: () async {
           if(_form.currentState!.validate()){
             if (file == null) return;

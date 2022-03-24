@@ -2,7 +2,7 @@
     package="com.complaints.complaints_project">
     <uses-permission android:name="android.permission.INTERNET"/>
    <application
-        android:label="complaints_project"
+        android:label="OnTheGo"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
