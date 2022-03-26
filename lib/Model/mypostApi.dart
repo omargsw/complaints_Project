@@ -15,8 +15,9 @@ class MyPostApi {
     required this.title,
     required this.description,
     required this.image,
-    required this.staus,
+    required this.status,
     required this.type,
+    required this.active,
     required this.createdAt,
     required this.userId,
     required this.name,
@@ -31,8 +32,9 @@ class MyPostApi {
   final String title;
   final String description;
   final String image;
-  final String staus;
+  final String status;
   final String type;
+  final String active;
   final DateTime createdAt;
   final int userId;
   final String name;
@@ -47,8 +49,9 @@ class MyPostApi {
     title: json["title"],
     description: json["description"],
     image: json["image"],
-    staus: json["staus"],
+    status: json["status"],
     type: json["type"],
+    active: json["active"],
     createdAt: DateTime.parse(json["created_at"]),
     userId: json["userID"],
     name: json["name"],
@@ -64,8 +67,9 @@ class MyPostApi {
     "title": title,
     "description": description,
     "image": image,
-    "staus": staus,
+    "status": status,
     "type": type,
+    "active": active,
     "created_at": createdAt.toIso8601String(),
     "userID": userId,
     "name": name,

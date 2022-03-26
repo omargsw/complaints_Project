@@ -44,9 +44,21 @@ class _LoginScreenState extends State<LoginScreen> {
       sharedPreferences.setString('image', json['user']['image'] );
       sharedPreferences.setInt('typeID', json['user']['user_type_id'] );
 
+      int? typeid = sharedPreferences.getInt('typeID');
+      print(response.body);
+      print(typeid);
       Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (BuildContext context) => const NavBar()),
               (Route<dynamic> route) => false);
+      // if(typeid == 1){
+      //
+      // }else{
+      //   Navigator.of(context).pushAndRemoveUntil(
+      //       MaterialPageRoute(builder: (BuildContext context) => const NavBarAdmin()),
+      //           (Route<dynamic> route) => false);
+      // }
+
+
     }
     return true;
   }

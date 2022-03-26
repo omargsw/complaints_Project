@@ -3,28 +3,29 @@ import 'package:complaints_project/Widgets/colors.dart';
 import 'package:complaints_project/main.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../Model/acceptedApi.dart';
 import '../Model/mypostApi.dart';
 import '../Widgets/appbar.dart';
 import '../Widgets/video_player.dart';
 import 'edit_post.dart';
 
-class MyPosts extends StatefulWidget {
-  const MyPosts({Key? key}) : super(key: key);
+class AcceptedPost extends StatefulWidget {
+  const AcceptedPost({Key? key}) : super(key: key);
 
   @override
-  _MyPostsState createState() => _MyPostsState();
+  _AcceptedPostState createState() => _AcceptedPostState();
 }
 
-class _MyPostsState extends State<MyPosts> {
+class _AcceptedPostState extends State<AcceptedPost> {
   var id = sharedPreferences!.getInt('userID');
   bool isloading = true;
 
-  List<MyPostApi> myposts = [];
-  Future MyPosts() async {
-    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/fetchMyPost.php?user_id=${id.toString()}';
+  List<AcceptedApi> myposts = [];
+  Future AcceptedPosts() async {
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/fetchPostAccepted.php?accepted_id=${id.toString()}&active=2';
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
-      final List<MyPostApi> postlist = myPostApiFromJson(response.body);
+      final List<AcceptedApi> postlist = acceptedApiFromJson(response.body);
       return postlist;
     }
   }
@@ -84,7 +85,7 @@ class _MyPostsState extends State<MyPosts> {
                 onPressed: (){
                   RemoveProducts(postId);
                   setState(() {
-                    MyPosts().then((postlist){
+                    AcceptedPosts().then((postlist){
                       setState(() {
                         myposts = postlist;
                       });
@@ -107,7 +108,7 @@ class _MyPostsState extends State<MyPosts> {
   @override
   void initState() {
     super.initState();
-    MyPosts().then((postlist){
+    AcceptedPosts().then((postlist){
       setState(() {
         myposts = postlist;
       });
@@ -118,7 +119,7 @@ class _MyPostsState extends State<MyPosts> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ColorForDesign().lightblue,
-      appBar: AppAppBar(title: "My Posts",show: true),
+      appBar: AppAppBar(title: "Post Accepted",show: true),
       body: Container(
           decoration: BoxDecoration(
             color: ColorForDesign().lightblue,
@@ -133,7 +134,7 @@ class _MyPostsState extends State<MyPosts> {
             scrollDirection: Axis.vertical,
             itemCount: myposts.length,
             itemBuilder: (context, index) {
-              MyPostApi postApi = myposts[index];
+              AcceptedApi postApi = myposts[index];
               if(myposts.isEmpty || myposts == null){
                 return Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -167,42 +168,6 @@ class _MyPostsState extends State<MyPosts> {
                                 child: Text(postApi.description,
                                   style: TextStyle(color: Colors.black.withOpacity(0.6)),
                                 ),
-                              ),
-                              ButtonBar(
-                                alignment: MainAxisAlignment.start,
-                                children: [
-                                  postApi.status == "Pending" ?
-                                  OutlinedButton.icon(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) => EditPost(postID: postApi.id,)),
-                                      ).then((value) {
-                                        setState(() {
-                                          if (value == true) {
-                                            MyPosts().then((postlist){
-                                              setState(() {
-                                                myposts = postlist;
-                                              });
-                                            });
-                                          } else {
-                                            null;
-                                          }
-                                        });
-                                      });
-                                    },
-                                    icon: const Icon(Icons.edit, size: 18,color: Colors.green,),
-                                    label: const Text("Edit",style: TextStyle(color: Colors.green),),
-                                  ) : Container(),
-                                  OutlinedButton.icon(
-                                    onPressed: () {
-                                      _showErrorDialog(postApi.id);
-                                    },
-                                    icon: const Icon(Icons.delete, size: 18,color: Colors.red,),
-                                    label: const Text("Delete",style: TextStyle(color: Colors.red),),
-                                  )
-                                ],
                               ),
                               VideoPlayerWidget(url: postApi.image,type: postApi.type,),
                             ],

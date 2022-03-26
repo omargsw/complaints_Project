@@ -1,23 +1,24 @@
 // To parse this JSON data, do
 //
-//     final postApi = postApiFromJson(jsonString);
+//     final acceptedApi = acceptedApiFromJson(jsonString);
 
 import 'dart:convert';
 
-List<PostApi> postApiFromJson(String str) => List<PostApi>.from(json.decode(str).map((x) => PostApi.fromJson(x)));
+List<AcceptedApi> acceptedApiFromJson(String str) => List<AcceptedApi>.from(json.decode(str).map((x) => AcceptedApi.fromJson(x)));
 
-String postApiToJson(List<PostApi> data) => json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
+String acceptedApiToJson(List<AcceptedApi> data) => json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
-class PostApi {
-  PostApi({
+class AcceptedApi {
+  AcceptedApi({
     required this.id,
-    required this.postApiUserId,
+    required this.acceptedApiUserId,
     required this.title,
     required this.description,
     required this.image,
     required this.status,
     required this.type,
     required this.active,
+    required this.acceptedId,
     required this.createdAt,
     required this.userId,
     required this.name,
@@ -28,13 +29,14 @@ class PostApi {
   });
 
   final int id;
-  final int postApiUserId;
+  final int acceptedApiUserId;
   final String title;
   final String description;
   final String image;
   final String status;
   final String type;
   final String active;
+  final String acceptedId;
   final DateTime createdAt;
   final int userId;
   final String name;
@@ -43,15 +45,16 @@ class PostApi {
   final String userImage;
   final int userTypeId;
 
-  factory PostApi.fromJson(Map<String, dynamic> json) => PostApi(
+  factory AcceptedApi.fromJson(Map<String, dynamic> json) => AcceptedApi(
     id: json["id"],
-    postApiUserId: json["user_id"],
+    acceptedApiUserId: json["user_id"],
     title: json["title"],
     description: json["description"],
     image: json["image"],
     status: json["status"],
     type: json["type"],
     active: json["active"],
+    acceptedId: json["accepted_id"],
     createdAt: DateTime.parse(json["created_at"]),
     userId: json["userID"],
     name: json["name"],
@@ -63,13 +66,14 @@ class PostApi {
 
   Map<String, dynamic> toJson() => {
     "id": id,
-    "user_id": postApiUserId,
+    "user_id": acceptedApiUserId,
     "title": title,
     "description": description,
     "image": image,
     "status": status,
     "type": type,
     "active": active,
+    "accepted_id": acceptedId,
     "created_at": createdAt.toIso8601String(),
     "userID": userId,
     "name": name,

@@ -1,15 +1,12 @@
-
-import 'dart:convert';
 import 'dart:io';
-
 import 'package:complaints_project/Model/user_info.dart';
 import 'package:complaints_project/Widgets/actionbattons.dart';
 import 'package:complaints_project/Widgets/colors.dart';
-import 'package:complaints_project/Widgets/drawer.dart';
+import 'package:complaints_project/main.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
-
 import '../Widgets/appbar.dart';
 import 'login_screen.dart';
 
@@ -23,6 +20,7 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  var id = sharedPreferences!.getInt('userID');
   GlobalKey<FormState> _form= GlobalKey<FormState>();
   GlobalKey<FormState> _form2= GlobalKey<FormState>();
   GlobalKey<FormState> _form3= GlobalKey<FormState>();
@@ -120,6 +118,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // TODO: implement initState
     super.initState();
     
+  }
+
+  Future updateName(int id, var name) async {
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/updatename.php';
+    final response = await http.post(Uri.parse(url),
+        body: {"id": id.toString(), "name": name});
+
+    print('UPDATE-NAME------>' + response.body);
+  }
+
+  Future updatePhone(int id, var phone) async {
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/updatephone.php';
+    final response = await http.post(Uri.parse(url),
+        body: {"id": id.toString(), "phone": phone});
+
+    print('UPDATE-PHONE------>' + response.body);
   }
   
   @override
@@ -335,6 +349,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             controller: email,
                           ),
                         ),),
+                      TextButton(onPressed: (){}, child: Text("Change Password",style: TextStyle(decoration: TextDecoration.underline),)),
                       Form(
                         key: _form4,
                         child: Column(
@@ -437,7 +452,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     print('Save with password');
                                   }
                                 }else{
-                                  print('Save without password');
+                                  //Save without password
+                                  updateName(id!, fname.text);
+                                  updatePhone(id!, phnum.text);
                                 }
                               }
 

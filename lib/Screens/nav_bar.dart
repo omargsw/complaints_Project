@@ -22,6 +22,7 @@ class NavBar extends StatefulWidget {
 
 class _NavBarState extends State<NavBar> {
   var id = sharedPreferences!.getInt('userID');
+  int? typeid = sharedPreferences!.getInt('typeID');
   String title = "onTheGo";
 
   int _currentIndex = 0;
@@ -94,7 +95,8 @@ class _NavBarState extends State<NavBar> {
         centerTitle: true,
         backgroundColor: ColorForDesign().blue,
       ),
-      bottomNavigationBar: BottomNavigationBar(
+      bottomNavigationBar: typeid == 1 ?
+      BottomNavigationBar(
         type: BottomNavigationBarType.shifting,
         currentIndex: _currentIndex,
         backgroundColor: colorScheme.surface,
@@ -119,6 +121,30 @@ class _NavBarState extends State<NavBar> {
           BottomNavigationBarItem(
             label: 'Add Post',
             icon: Icon(Icons.add),
+          ),
+        ],
+      ) :
+      BottomNavigationBar(
+        type: BottomNavigationBarType.shifting,
+        currentIndex: _currentIndex,
+        backgroundColor: colorScheme.surface,
+        selectedItemColor: ColorForDesign().blue,
+        unselectedItemColor: colorScheme.onSurface.withOpacity(.30),
+        selectedLabelStyle: textTheme.caption,
+        unselectedLabelStyle: textTheme.caption,
+        onTap: _onItemTapped,
+        items: const [
+          BottomNavigationBarItem(
+            label: 'Home',
+            icon: Icon(Icons.home),
+          ),
+          BottomNavigationBarItem(
+            label: 'Profile',
+            icon: Icon(Icons.person),
+          ),
+          BottomNavigationBarItem(
+            label: 'Notification',
+            icon: Icon(Icons.notifications),
           ),
         ],
       ),

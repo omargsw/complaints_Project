@@ -22,9 +22,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   var id = sharedPreferences!.getInt('userID');
-  var typeid = sharedPreferences!.getInt('user_type_id');
+  int? typeid = sharedPreferences!.getInt('typeID');
   FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  var fbm = FirebaseMessaging.instance;
   var title;
   var body;
 
@@ -33,7 +32,7 @@ class _HomePageState extends State<HomePage> {
 
   List<PostApi> posts = [];
   Future Posts() async {
-    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/fetchPost.php';
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/fetchPost.php?active=1';
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
       final List<PostApi> postlist = postApiFromJson(response.body);
@@ -77,6 +76,27 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       backgroundColor: Colors.red,
+      duration: Duration(seconds: 3),
+      behavior: SnackBarBehavior.floating,
+    );
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+  void _showDoneSnackBar(BuildContext context) {
+    final snackBar = SnackBar(
+      content: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        children: const [
+          Icon(Icons.done_outline, size: 20,color: Colors.green,),
+          SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              "Post accepted",
+              style: TextStyle(fontSize: 15,color: Colors.green),
+            ),
+          ),
+        ],
+      ),
+      backgroundColor: Colors.black45,
       duration: Duration(seconds: 3),
       behavior: SnackBarBehavior.floating,
     );
@@ -282,6 +302,31 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  Future updateStatus(int id, var status) async {
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/updateStstus.php';
+    final response = await http.post(Uri.parse(url),
+        body: {"id": id.toString(), "status": status});
+
+    print('UPDATE-status------>' + response.body);
+  }
+
+  Future updateActive(int id, var active) async {
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/updateActive.php';
+    final response = await http.post(Uri.parse(url),
+        body: {"id": id.toString(), "active": active});
+
+    print('UPDATE-active------>' + response.body);
+  }
+
+  Future updateAcceptedID(int id, var acceptedid) async {
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/updateAcceptedId.php';
+    final response = await http.post(Uri.parse(url),
+        body: {"id": id.toString(), "accepted_id": acceptedid});
+
+    print('UPDATE-acceptedid------>' + response.body);
+  }
+
+
 
   @override
   void initState() {
@@ -335,13 +380,6 @@ class _HomePageState extends State<HomePage> {
             });
       }
     });
-
-    // FirebaseMessaging.instance.subscribeToTopic('$id');
-    // fbm.getToken().then((value) {
-    //   print("-----------------------------");
-    //   print(value);
-    //   print("-----------------------------");
-    // });
   }
 
   @override
@@ -396,7 +434,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           VideoPlayerWidget(url: postApi.image,type: postApi.type,),
-                          userinfo[0]['user_type_id'] == 1 ?
+                          typeid == 1 ?
                           ButtonBar(
                             alignment: MainAxisAlignment.start,
                             children: [
@@ -464,7 +502,32 @@ class _HomePageState extends State<HomePage> {
                                                   )),
                                             ),
                                             TextButton(
-                                              onPressed: (){
+                                              onPressed: () async{
+                                                title = userinfo[0]['name'];
+                                                body = "Accepted your post";
+                                                await updateStatus(postApi.id, "Accepted");
+                                                await updateActive(postApi.id, "2");
+                                                await updateAcceptedID(postApi.id, id.toString());
+                                                sendNotify(1, title, body, postApi.userId);
+                                                await _firestore.collection('notifications').doc().set({
+                                                  "name": userinfo[0]['name'],
+                                                  "email": userinfo[0]['email'],
+                                                  "image" : "https://abulsamrie11.000webhostapp.com/image/"+userinfo[0]['image'],
+                                                  "userid": id,
+                                                  "title" : title,
+                                                  "body" : body,
+                                                  "status": 1,
+                                                  "reciveremail" : postApi.email,
+                                                  "time": FieldValue.serverTimestamp(),
+                                                });
+                                                _showDoneSnackBar(context);
+                                                setState(() {
+                                                  Posts().then((postlist){
+                                                    setState(() {
+                                                      posts = postlist;
+                                                    });
+                                                  });
+                                                });
                                                 Navigator.of(context).pop();
                                               },
                                               child: Text('YES',
