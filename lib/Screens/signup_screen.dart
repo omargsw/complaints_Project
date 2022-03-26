@@ -190,9 +190,10 @@ class _SignUpState extends State<SignUp> {
                                     validator: (value){
                                       if(value!.isEmpty) {
                                         return "Please enter your name";
+                                      }else if(name.text.length < 4){
+                                        return "The name must be greater than 4 characters";
                                       }
                                     },
-
                                     controller: name,
                                   ),
                                 ),
@@ -211,6 +212,8 @@ class _SignUpState extends State<SignUp> {
                                     validator: (value){
                                       if(value!.isEmpty) {
                                         return "The phone number must be 10 digits";
+                                      }else if(num.text.length != 10){
+                                        return "Phone number must be 10 numbers";
                                       }
                                     },
 

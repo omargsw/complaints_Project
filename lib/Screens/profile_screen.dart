@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import '../Widgets/appbar.dart';
 import 'login_screen.dart';
+import 'nav_bar.dart';
 
 class ProfileScreen extends StatefulWidget {
   final List<UserInfoApi>? user;
@@ -28,12 +29,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   var fname=TextEditingController();
   var phnum=TextEditingController();
   var email=TextEditingController();
-  var pass=TextEditingController();
+  var pass1=TextEditingController();
   var pass2=TextEditingController();
-  bool ob = true,ob2= true;
+  var pass3=TextEditingController();
+  bool ob = true,ob2= true,ob3= true;
   var confpass;
   Icon iconpass = Icon(Icons.visibility,color: ColorForDesign().blue,);
   Icon iconpass2 = Icon(Icons.visibility,color: ColorForDesign().blue,);
+  Icon iconpass3 = Icon(Icons.visibility,color: ColorForDesign().blue,);
+
   bool _load = false;
   File ? imageFile;
   final imagePicker = ImagePicker();
@@ -41,23 +45,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String photo = '';
   String imagepath = '';
 
-  void _showErrorSnackBar(BuildContext context) {
+  List<UserInfoApi> user = [];
+  Future UserInfo() async {
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/UserInfo.php?userid=${id.toString()}';
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final List<UserInfoApi> userlist = userInfoApiFromJson(response.body);
+      return userlist;
+    }
+  }
+
+  void _showDoneSnackBar(BuildContext context,String text) {
     final snackBar = SnackBar(
       content: Row(
         mainAxisAlignment: MainAxisAlignment.start,
-        children: const [
-          Icon(Icons.error_outline, size: 20,color: Colors.black,),
-          SizedBox(width: 16),
+        children: [
+          const Icon(Icons.done_outline, size: 20,color: Colors.green,),
+          const SizedBox(width: 16),
           Expanded(
             child: Text(
-              "You must login first",
-              style: TextStyle(fontSize: 15),
+              text,
+              style: const TextStyle(fontSize: 15,color: Colors.green),
             ),
           ),
         ],
       ),
-      backgroundColor: Colors.red,
-      duration: Duration(seconds: 3),
+      backgroundColor: Colors.black45,
+      duration: const Duration(seconds: 3),
       behavior: SnackBarBehavior.floating,
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -134,6 +148,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         body: {"id": id.toString(), "phone": phone});
 
     print('UPDATE-PHONE------>' + response.body);
+  }
+
+  Future updatePassword(int id, var password) async {
+    String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/updatepassword.php';
+    final response = await http.post(Uri.parse(url),
+        body: {"id": id.toString(), "password": password});
+
+    print('UPDATE-PASSWORD------>' + response.body);
   }
   
   @override
@@ -266,6 +288,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     height: 35,
                   ),
                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Form(
                         key: _form,
@@ -289,6 +312,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             validator: (value){
                               if(value!.isEmpty) {
                                 return "Required";
+                              }else if(fname.text.length < 4){
+                                return "The name must be greater than 4 characters";
                               }
                             },
                             controller: fname,
@@ -316,6 +341,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             validator: (value){
                               if(value!.isEmpty) {
                                 return "Required";
+                              }else if(phnum.text.length != 10){
+                                return "Phone number must be 10 numbers";
                               }
                             },
                             controller: phnum,
@@ -349,96 +376,192 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             controller: email,
                           ),
                         ),),
-                      TextButton(onPressed: (){}, child: Text("Change Password",style: TextStyle(decoration: TextDecoration.underline),)),
-                      Form(
-                        key: _form4,
-                        child: Column(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              child: TextFormField(
-                                keyboardType: TextInputType.visiblePassword,
-                                decoration: InputDecoration(
-                                  contentPadding: const EdgeInsets.all(0),
-                                  hintText: "Password",
-                                  hintStyle: TextStyle(fontSize: 10,fontWeight: FontWeight.bold),
-                                  fillColor: Colors.white,
-                                  focusColor: Colors.white,
-                                  filled: true,
-                                  suffixIcon: IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        if (ob == true) {
-                                          ob = false;
-                                          iconpass = Icon(Icons.visibility_off,color: ColorForDesign().blue,);
-                                        } else {
-                                          ob = true;
-                                          iconpass = Icon(Icons.visibility,color: ColorForDesign().blue,);
-                                        }
-                                      });
-                                    },
-                                    icon: iconpass,
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: TextButton(onPressed: (){
+                          showDialog<String>(
+                              context: context,
+                              builder: (BuildContext context) => StatefulBuilder(builder: (context, setState) {
+                                return AlertDialog(
+                                  shape: const RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.all(Radius.circular(20.0))),
+                                  backgroundColor: ColorForDesign().lightblue,
+                                  content: Container(
+                                    height: 280,
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Form(
+                                          key: _form4,
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              Container(
+                                                padding: const EdgeInsets.all(10),
+                                                child: TextFormField(
+                                                  keyboardType: TextInputType.visiblePassword,
+                                                  decoration: InputDecoration(
+                                                    contentPadding: const EdgeInsets.all(0),
+                                                    hintText: "Current Password",
+                                                    hintStyle: TextStyle(fontSize: 10,fontWeight: FontWeight.bold),
+                                                    fillColor: Colors.white,
+                                                    focusColor: Colors.white,
+                                                    filled: true,
+                                                    suffixIcon: IconButton(
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          if (ob == true) {
+                                                            ob = false;
+                                                            iconpass = Icon(Icons.visibility_off,color: ColorForDesign().blue,);
+                                                          } else {
+                                                            ob = true;
+                                                            iconpass = Icon(Icons.visibility,color: ColorForDesign().blue,);
+                                                          }
+                                                        });
+                                                      },
+                                                      icon: iconpass,
+                                                    ),
+                                                    border: OutlineInputBorder(
+                                                      borderRadius: BorderRadius.circular(10.0),
+                                                      borderSide: BorderSide.none,
+                                                    ),
+                                                    prefixIcon: Icon(Icons.lock,color: ColorForDesign().blue,),
+                                                  ),
+                                                  validator: (value){
+                                                    if(value!.isEmpty) {
+                                                      return "Required";
+                                                    }else if(userApi.password != pass1.text){
+                                                      return "The password does't match the current password";
+                                                    }
+                                                  },
+                                                  obscureText: ob,
+                                                  controller: pass1,
+                                                ),
+                                              ),
+                                              Container(
+                                                padding: const EdgeInsets.all(10),
+                                                child: TextFormField(
+                                                  keyboardType: TextInputType.visiblePassword,
+                                                  decoration: InputDecoration(
+                                                    contentPadding: const EdgeInsets.all(0),
+                                                    hintText: "New Password",
+                                                    hintStyle: TextStyle(fontSize: 10,fontWeight: FontWeight.bold),
+                                                    fillColor: Colors.white,
+                                                    focusColor: Colors.white,
+                                                    filled: true,
+                                                    suffixIcon: IconButton(
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          if (ob2 == true) {
+                                                            ob2 = false;
+                                                            iconpass2 = Icon(Icons.visibility_off,color: ColorForDesign().blue,);
+                                                          } else {
+                                                            ob2 = true;
+                                                            iconpass2 = Icon(Icons.visibility,color: ColorForDesign().blue,);
+                                                          }
+                                                        });
+                                                      },
+                                                      icon: iconpass2,
+                                                    ),
+                                                    border: OutlineInputBorder(
+                                                      borderRadius: BorderRadius.circular(10.0),
+                                                      borderSide: BorderSide.none,
+                                                    ),
+                                                    prefixIcon: Icon(Icons.lock,color: ColorForDesign().blue,),
+                                                  ),
+                                                  validator: (value){
+                                                    confpass = value;
+                                                    if(value!.isEmpty) {
+                                                      return "Required";
+                                                    }
+                                                  },
+                                                  obscureText: ob2,
+                                                  controller: pass2,
+                                                ),
+                                              ),
+                                              Container(
+                                                padding: const EdgeInsets.all(10),
+                                                child: TextFormField(
+                                                  keyboardType: TextInputType.visiblePassword,
+                                                  decoration: InputDecoration(
+                                                    contentPadding: const EdgeInsets.all(0),
+                                                    hintText: "Confirm the new password ",
+                                                    hintStyle: TextStyle(fontSize: 10,fontWeight: FontWeight.bold),
+                                                    fillColor: Colors.white,
+                                                    focusColor: Colors.white,
+                                                    filled: true,
+                                                    suffixIcon: IconButton(
+                                                      onPressed: () {
+                                                        setState(() {
+                                                          if (ob3 == true) {
+                                                            ob3 = false;
+                                                            iconpass3 = Icon(Icons.visibility_off,color: ColorForDesign().blue,);
+                                                          } else {
+                                                            ob3 = true;
+                                                            iconpass3 = Icon(Icons.visibility,color: ColorForDesign().blue,);
+                                                          }
+                                                        });
+                                                      },
+                                                      icon: iconpass3,
+                                                    ),
+                                                    border: OutlineInputBorder(
+                                                      borderRadius: BorderRadius.circular(10.0),
+                                                      borderSide: BorderSide.none,
+                                                    ),
+                                                    prefixIcon: Icon(Icons.lock,color: ColorForDesign().blue,),
+                                                  ),
+                                                  validator: (value){
+                                                    if(value!.isEmpty) {
+                                                      return "Required";
+                                                    }else if(value != confpass){
+                                                      return "Password does't match !";
+                                                    }
+                                                  },
+                                                  obscureText: ob3,
+                                                  controller: pass3,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10.0),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  prefixIcon: Icon(Icons.lock,color: ColorForDesign().blue,),
-                                ),
-                                validator: (value){
-                                  confpass = value;
-                                  if(value!.isEmpty) {
-                                    return "Required";
-                                  }
-                                },
-                                obscureText: ob,
-                                controller: pass,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(10),
-                              child: TextFormField(
-                                keyboardType: TextInputType.visiblePassword,
-                                decoration: InputDecoration(
-                                  contentPadding: const EdgeInsets.all(0),
-                                  hintText: "Confirm Password",
-                                  hintStyle: TextStyle(fontSize: 10,fontWeight: FontWeight.bold),
-                                  fillColor: Colors.white,
-                                  focusColor: Colors.white,
-                                  filled: true,
-                                  suffixIcon: IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        if (ob2 == true) {
-                                          ob2 = false;
-                                          iconpass2 = Icon(Icons.visibility_off,color: ColorForDesign().blue,);
-                                        } else {
-                                          ob2 = true;
-                                          iconpass2 = Icon(Icons.visibility,color: ColorForDesign().blue,);
-                                        }
-                                      });
-                                    },
-                                    icon: iconpass2,
-                                  ),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(10.0),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  prefixIcon: Icon(Icons.lock,color: ColorForDesign().blue,),
-                                ),
-                                validator: (value){
-                                  if(value!.isEmpty) {
-                                    return "Required";
-                                  }else if(value != confpass){
-                                    return "Password does't match !";
-                                  }
-                                },
-                                obscureText: ob2,
-                                controller: pass2,
-                              ),
-                            ),
-                          ],
-                        ),
+                                  actions: <Widget>[
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                      children: [
+                                        TextButton(
+                                          onPressed: (){
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: Text('CANCEL',
+                                              style: TextStyle(
+                                                color: ColorForDesign().blue,
+                                              )),
+                                        ),
+                                        TextButton(
+                                          onPressed: ()async{
+                                            if(_form4.currentState!.validate()){
+                                              await updatePassword(id!, pass3.text);
+                                              _showDoneSnackBar(context, "Password changed successfully");
+                                              pass1.clear();
+                                              pass2.clear();
+                                              pass3.clear();
+                                              Navigator.of(context).pop();
+                                            }
+                                          },
+                                          child: Text('SAVE',
+                                              style: TextStyle(
+                                                color: ColorForDesign().blue,
+                                              )),
+                                        ),
+                                      ],
+                                    )
+                                  ],
+                                );
+                              },));
+                        }, child: const Text("Edit Password",style: TextStyle(decoration: TextDecoration.underline),)),
                       ),
                       Builder(
                         builder: (context) => Center(
@@ -446,18 +569,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             text: 'SAVE',
                             width: 150,
                             onClicked: () async {
-                              if(_form.currentState!.validate() && _form2.currentState!.validate() && _form3.currentState!.validate()){
-                                if(pass.text.isNotEmpty){
-                                  if(_form4.currentState!.validate()){
-                                    print('Save with password');
-                                  }
-                                }else{
-                                  //Save without password
-                                  updateName(id!, fname.text);
-                                  updatePhone(id!, phnum.text);
-                                }
+                              if(_form.currentState!.validate() && _form2.currentState!.validate()){
+                                await updateName(id!, fname.text);
+                                await updatePhone(id!, phnum.text);
+                                _showDoneSnackBar(context, "Profile modified successfully");
+                                Navigator.of(context).pushReplacement(
+                                    MaterialPageRoute(builder: (BuildContext context) => const NavBar()),);
                               }
-
                             },
                           ),
                         ),

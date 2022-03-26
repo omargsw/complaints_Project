@@ -45,14 +45,14 @@ class _AddPostState extends State<AddPost> {
   File ? imageFile;
   final imagePicker = ImagePicker();
 
-  Future insertPost(var user_id,var title ,var description,var image,var staus,var type) async {
+  Future insertPost(var user_id,var title ,var description,var image,var status,var type) async {
     String url = 'https://abulsamrie11.000webhostapp.com/onTheGo/insertPost.php';
     final response = await http.post(Uri.parse(url), body: {
       "user_id": user_id,
       "title": title,
       "description": description,
       "image": image,
-      "staus" : staus,
+      "status" : status,
       "type" : type
     });
     print(response.body);
@@ -205,7 +205,7 @@ class _AddPostState extends State<AddPost> {
                         // print(path);
                         setState(() {
                           file = File(path);
-                          status = "Video";
+                          status = "video";
                           //uplfile = true;
                         });
                       },
@@ -225,7 +225,7 @@ class _AddPostState extends State<AddPost> {
                         print("Path is ===="+path);
                         setState(() {
                           file = File(path);
-                          status = "Image";
+                          status = "image";
                           //uplfile = true;
                         });
                       },
@@ -235,35 +235,10 @@ class _AddPostState extends State<AddPost> {
                   ],
                 ),
                 const SizedBox(height: 20,),
-                file != null ?
-                Padding(
-                  padding: const EdgeInsets.all(15.0),
-                  child: Center(
-                    child: SizedBox(
-                      height: 200,
-                      width: 200,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                              color: Colors.green,
-                              width: 2.0,
-                              style: BorderStyle.solid),
-                          borderRadius: const BorderRadius.all(
-                            Radius.circular(100),
-                          ),
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.done_outline,color: Colors.green,size: 60,),
-                            const SizedBox(height: 20,),
-                            Text("$status is uploaded"),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ) : Container()
+                task != null ? Center(
+                  child: buildUploadStatus(task!),
+                ) :
+                Container(),
               ],
             );
 
@@ -272,4 +247,23 @@ class _AddPostState extends State<AddPost> {
       ),
     );
   }
+
+  Widget buildUploadStatus(UploadTask task) => StreamBuilder<TaskSnapshot>(
+    stream: task.snapshotEvents,
+    builder: (context, snapshot) {
+      if (snapshot.hasData) {
+        final snap = snapshot.data!;
+        final progress = snap.bytesTransferred / snap.totalBytes;
+        final percentage = (progress * 100).toStringAsFixed(2);
+
+        return Text(
+          '$percentage %',
+          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+        );
+      } else {
+        return Container();
+      }
+    },
+  );
+
 }
